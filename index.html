@@ -1,0 +1,1265 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Strategic executive dashboard for BiteSpeed Eats USA.">
+<title>BiteSpeed Eats USA — Strategic Dashboard</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* 
+  Architecture & Theming: 
+  - CSS Variables cleanly separate layout metrics from brand colors.
+  - "Neon Fast Food" Palette: High-contrast Dark mode infused with Light Yellow & Red glows.
+  - Smooth hardware-accelerated transitions via cubic-bezier timing functions.
+*/
+:root{
+  color-scheme: dark;
+  /* Dark warm background suited for food tech */
+  --bg-0:#0f0a05; --bg-1:#1a120a; --bg-2:#291c12;
+  --card:rgba(25, 18, 10, 0.7);
+  --card-forte:rgba(40, 25, 15, 0.8);
+  --borda:rgba(255,255,255,.08);
+  --borda-luz:rgba(255, 235, 59, .4);
+  --ink-1:#ffffff; --ink-2:#cbd5e1; --ink-3:#94a3b8;
+  --grid:rgba(255,255,255,.05); --eixo:rgba(255,255,255,.15);
+  
+  --s1:#ffeb3b; /* Primary: Light Yellow */
+  --s2:#ef4444; /* Secondary: Vibrant Red */
+  --s3:#f97316; /* Accent: Orange */
+  
+  /* Ramped Colors for Funnels/Bars */
+  --o1:#fffde7; --o2:#fff59d; --o3:#ffee58; --o4:#ffeb3b; --o5:#fbc02d; --o6:#f57f17;
+  
+  --neon-blue:#ffeb3b; /* Mapped to Yellow for structural compatibility */
+  --neon-red:#ef4444;  
+  --neon-ambar:#f97316;
+  
+  /* Semantic Status */
+  --ok:#ffeb3b; --atencao:#f97316; --critico:#ef4444;
+  --raio:20px; 
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans);
+  background:var(--bg-0);
+  color:var(--ink-1);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  line-height:1.5;
+}
+
+/* Atmospheric Food-Tech Glow Background */
+body::before{
+  content:""; position:fixed; inset:0; z-index:-1;
+  background:
+    radial-gradient(1100px 620px at 12% -8%, rgba(255, 235, 59, 0.12), transparent 62%),
+    radial-gradient(980px 620px at 92% 4%, rgba(239, 68, 68, 0.15), transparent 60%),
+    radial-gradient(1200px 800px at 50% 108%, rgba(255, 235, 59, 0.08), transparent 65%),
+    linear-gradient(172deg, var(--bg-2) 0%, var(--bg-1) 38%, var(--bg-0) 100%);
+}
+body::after{
+  content:""; position:fixed; inset:0; z-index:-2;
+  background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-0); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; transition: 0.3s; }
+::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
+
+.wrap{
+  max-width:1560px; margin:0 auto; padding:34px 26px 72px;
+  animation: fadeSlideUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes fadeSlideUp {
+  0% { opacity: 0; transform: translateY(30px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+header.topo{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:15px; }
+.marca{display:flex; align-items:center; gap:15px}
+.selo{
+  width:48px;height:48px;border-radius:14px;flex:0 0 auto;
+  background:linear-gradient(140deg,var(--neon-blue),var(--neon-red));
+  box-shadow:0 0 26px rgba(255, 235, 59, .35), inset 0 0 18px rgba(255,255,255,.4);
+  display:grid;place-items:center;font-size:22px; color: #111;
+}
+h1{font-size:26px; line-height:1.15; margin:0; letter-spacing:-.022em; font-weight:800; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
+.sub{color:var(--ink-2); font-size:13.5px; margin-top:3px}
+
+.top-utils { display: flex; gap: 12px; align-items: center; }
+.btn-util {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--borda);
+  color: var(--ink-1); font-family: var(--sans); font-size: 13.5px; font-weight: 600;
+  padding: 10px 18px; border-radius: 999px; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  backdrop-filter: blur(10px); transition: var(--transition);
+}
+.btn-util:focus-visible { outline: 2px solid var(--neon-blue); outline-offset: 2px; }
+.btn-util.destaque { 
+  background: linear-gradient(135deg, var(--s1), var(--s2)); 
+  border: none; color: #111; text-shadow: none; font-weight: 700;
+  box-shadow: 0 0 15px rgba(239, 68, 68, .5); 
+}
+.btn-util:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 12px rgba(255, 235, 59, .25); background: rgba(255,255,255,0.1); }
+.btn-util.destaque:hover { box-shadow: 0 10px 25px rgba(239, 68, 68, .6), 0 0 20px rgba(255, 235, 59, .5); color: #000; }
+
+.filtros-container { margin-bottom: 26px; }
+.seg-grupo { display: flex; gap: 10px; flex-wrap: wrap; }
+.seg-btn {
+  background: var(--card); border: 1px solid var(--borda); color: var(--ink-3);
+  padding: 8px 22px; border-radius: 999px; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;
+  cursor: pointer; transition: var(--transition);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+}
+.seg-btn.on { 
+  background: linear-gradient(135deg, var(--neon-blue), var(--s2)); 
+  color: #111; border-color: transparent; 
+  box-shadow: 0 4px 15px rgba(255, 235, 59, 0.4), inset 0 1px 1px rgba(255,255,255,0.5); 
+  text-shadow: none;
+}
+.seg-btn:hover:not(.on) { transform: translateY(-2px); background: rgba(255,255,255,0.08); color: var(--ink-1); }
+
+.card{
+  position:relative; background:var(--card); border:1px solid var(--borda); border-radius:var(--raio);
+  backdrop-filter:blur(24px) saturate(140%); -webkit-backdrop-filter:blur(24px) saturate(140%);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), 0 18px 46px -24px rgba(0,0,0,.9);
+  padding:20px 22px 18px; opacity:0; transform:translateY(16px);
+  transition:opacity .6s cubic-bezier(.22,.7,.3,1), transform .6s cubic-bezier(.22,.7,.3,1), border-color .3s, box-shadow .3s;
+}
+.card.vis{opacity:1; transform:none}
+.card:hover{ border-color:var(--borda-luz); transform: translateY(-4px); box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 15px 30px rgba(0,0,0,0.6), 0 0 25px rgba(255, 235, 59, .15); z-index: 5; }
+.card::after{
+  content:""; position:absolute; left:22px; right:22px; top:-1px; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255, 235, 59, .6),transparent); opacity:0; transition:opacity .3s;
+}
+.card:hover::after{opacity:1}
+
+.cab{display:flex; align-items:baseline; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:4px}
+h2{font-size:15.5px; margin:0; font-weight:700; letter-spacing:-.012em; text-shadow: 0 2px 4px rgba(0,0,0,0.5);}
+.dica{font-size:12.5px; color:var(--ink-3)}
+.leitura{ font-size:13px; color:var(--ink-2); margin-top:14px; padding-top:13px; border-top:1px solid var(--borda); line-height:1.6; }
+.leitura b{color:var(--ink-1); font-weight:620; text-shadow: 0 1px 3px rgba(0,0,0,0.6);}
+.leitura .sinal{color:var(--neon-red); font-weight:700; margin-right:7px; text-shadow: 0 0 8px var(--neon-red);}
+
+.grade{display:grid; gap:18px} .g2{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.secao{margin-top:18px}
+.rotulo-secao{ display:flex;align-items:center;gap:12px; font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3); margin:24px 0 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-weight: 700;}
+.rotulo-secao::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--borda),transparent)}
+
+/* AI Command Center */
+.agir{ background:linear-gradient(135deg, rgba(255, 235, 59, .06), rgba(239, 68, 68, .05) 55%, rgba(255,255,255,.02)); border-color:rgba(255, 235, 59, .25); }
+.acoes { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+.alerta-card {
+    display: flex; gap: 16px; align-items: center;
+    background: rgba(0,0,0,0.45); border: 1px solid var(--borda);
+    border-radius: 14px; padding: 16px 20px;
+    transition: var(--transition);
+    position: relative; overflow: hidden;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.03);
+}
+.alerta-card:hover { background: rgba(255,255,255,0.05); border-color: var(--borda-luz); transform: translateX(6px); }
+.alerta-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background: linear-gradient(180deg, var(--neon-blue), var(--neon-red)); }
+.alerta-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 20px;
+    background: rgba(0,0,0,0.6); border: 1px solid;
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.1);
+    flex-shrink: 0; transition: 0.3s;
+}
+.alerta-card:hover .alerta-icon { transform: scale(1.1); }
+.alerta-content { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.alerta-header { display: flex; align-items: center; gap: 10px; }
+.alerta-header h4 { margin: 0; font-size: 14.5px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+.badge { font-size: 10px; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.4);}
+.alerta-desc { margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
+.alerta-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 6px; }
+.alerta-impacto { font-size: 11.5px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; display: flex; flex-direction: column;}
+.alerta-impacto b { font-size: 19px; color: var(--ok); text-shadow: 0 0 12px rgba(255, 235, 59, 0.4); letter-spacing: -0.02em;}
+.alerta-action button { 
+    background: rgba(0,0,0,0.3); border: 1px solid; border-radius: 8px; 
+    padding: 6px 14px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+    transition: 0.2s; display: flex; align-items: center; gap: 8px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+}
+.alerta-action button:hover { background: rgba(255,255,255,0.15); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+
+/* KPIs */
+.kpis{display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:14px}
+.kpi{padding:17px 18px 15px}
+.kpi .rot{font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); font-weight: 700;}
+.kpi .num{ font-size:33px; font-weight:800; letter-spacing:-.035em; margin:9px 0 2px; line-height:1.05; background:linear-gradient(100deg,#fff59d 0%, var(--neon-blue) 38%, var(--neon-red) 100%); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 2px 12px rgba(255, 235, 59, .45)); }
+.kpi .pe{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-3); margin-top:6px}
+.delta{display:inline-flex; align-items:center; gap:4px; font-weight:700; font-size:12px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);}
+.delta.bom{color:var(--ok)} .delta.ruim{color:var(--critico)}
+.faisca{margin-top:10px; height:26px; display:block; width:100%}
+.nota-base{font-size:11.5px; color:var(--ink-3); margin:11px 2px 0; line-height:1.6}
+
+/* Charts */
+.plot{width:100%; display:block; overflow:visible}
+.eixo-txt{fill:var(--ink-3); font-size:11px; font-family:var(--sans); font-variant-numeric:tabular-nums; text-shadow: 0 1px 3px rgba(0,0,0,0.8);}
+.rot-txt{fill:var(--ink-2); font-size:11.5px; font-family:var(--sans); text-shadow: 0 1px 3px rgba(0,0,0,0.8);}
+.val-txt{fill:#fff; font-size:12px; font-weight:700; font-family:var(--sans); text-shadow: 0 1px 4px rgba(0,0,0,0.8);}
+.mini-txt{fill:var(--ink-3); font-size:10.5px; font-family:var(--sans); text-shadow: 0 1px 3px rgba(0,0,0,0.8);}
+.linha-grid{stroke:var(--grid); stroke-width:1} .linha-eixo{stroke:var(--eixo); stroke-width:1}
+.marca-hover{transition:opacity .18s} .grupo:hover .marca-hover{opacity:.5} .grupo .item:hover .marca-hover{opacity:1}
+
+@keyframes crescerX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes crescerY{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes surgir{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes riscar{from{stroke-dashoffset:var(--comp)}to{stroke-dashoffset:0}}
+.an{transform-box:fill-box; animation-duration:.85s; animation-timing-function:cubic-bezier(.25,.85,.3,1); animation-fill-mode:backwards}
+.an-x{animation-name:crescerX; transform-origin:left center}
+.an-xc{animation-name:crescerX; transform-origin:center}
+.an-y{animation-name:crescerY; transform-origin:bottom center}
+.an-b{animation-name:surgir; transform-origin:center; animation-timing-function:cubic-bezier(.3,1.4,.5,1)}
+.an-linha{animation:riscar 1.5s cubic-bezier(.3,.8,.35,1) backwards}
+.an-area{animation:aparecer .9s ease .35s backwards}
+@keyframes aparecer{from{opacity:0}to{opacity:1}}
+
+.alterna{display:flex; gap:4px; background:rgba(0,0,0,.4); border:1px solid var(--borda); border-radius:999px; padding:3px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);}
+.alterna button{ font:inherit; font-size:11.5px; font-weight: 600; color:var(--ink-3); background:transparent; border:0; padding:4px 13px; border-radius:999px; cursor:pointer; transition:.2s; }
+.alterna button[aria-pressed="true"]{background:rgba(255, 235, 59, .2); color:#fff; box-shadow: 0 2px 5px rgba(0,0,0,0.4);}
+.oculto{display:none}
+
+/* Tables & Tooltips */
+table{width:100%; border-collapse:collapse; font-size:12.5px; font-variant-numeric:tabular-nums}
+thead th{ text-align:right; font-weight:700; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); padding:9px 10px; border-bottom:1px solid var(--borda); white-space:nowrap; background: rgba(0,0,0,0.4);}
+thead th:first-child, tbody td:first-child{text-align:left}
+tbody td{padding:10px; border-bottom:1px solid rgba(255,255,255,.05); text-align:right; color:var(--ink-2)}
+tbody td:first-child{color:var(--ink-1); font-weight:600}
+tbody tr{transition:background .18s} tbody tr:hover{background:rgba(255,255,255,.05)}
+tbody tr.perigo td:first-child{color:var(--critico)} tbody tr.perigo{background:rgba(239, 68, 68, .10)} tbody tr.perigo:hover{background:rgba(239, 68, 68, .15)}
+.tag{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); color:#111;}
+.tag.ok{background:rgba(255, 235, 59, .85); border:1px solid var(--s1);}
+.tag.at{background:rgba(249, 115, 22, .85); border:1px solid var(--s3); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6);}
+.tag.cr{background:rgba(239, 68, 68, .85); border:1px solid var(--s2); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6);}
+.rolagem{overflow-x:auto}
+
+#tip{ position:fixed; z-index:60; pointer-events:none; opacity:0; transform:translateY(5px); transition:opacity .13s, transform .13s; background:rgba(15,10,5,.95); border:1px solid var(--borda-luz); border-radius:12px; padding:12px 15px; font-size:12.5px; min-width:150px; max-width:290px; box-shadow:0 20px 44px -18px rgba(0,0,0,.95), 0 0 25px rgba(255, 235, 59, 0.2); backdrop-filter:blur(16px); }
+#tip.on{opacity:1; transform:none}
+#tip .t{font-weight:700; margin-bottom:8px; font-size:13px; color:#fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;}
+#tip .l{display:flex; justify-content:space-between; gap:20px; color:var(--ink-2); line-height:1.75}
+#tip .l b{color:var(--ink-1); font-variant-numeric:tabular-nums; font-weight:600}
+
+.chave{display:flex; flex-wrap:wrap; gap:16px; font-size:12px; color:var(--ink-2); margin-top:12px; font-weight: 500;}
+.chave span{display:inline-flex; align-items:center; gap:7px}
+.pt{width:11px; height:11px; border-radius:3px; flex:0 0 auto; box-shadow: 0 0 5px rgba(255,255,255,0.3);} .pt.round{border-radius:50%}
+
+footer{margin-top:44px; padding-top:22px; border-top:1px solid var(--borda); color:var(--ink-3); font-size:12px; line-height:1.75}
+footer b{color:var(--ink-2); font-weight:600}
+
+/* PDF Overlay */
+#loading-overlay { display: none; position: fixed; inset: 0; background: rgba(15,10,5,0.95); z-index: 9999; justify-content: center; align-items: center; font-size: 20px; font-weight: 800; color: var(--neon-blue); flex-direction: column; gap: 15px; backdrop-filter: blur(10px); }
+.spinner { border: 4px solid rgba(255,255,255,0.1); width: 60px; height: 60px; border-radius: 50%; border-left-color: var(--neon-blue); animation: spin 1s linear infinite; box-shadow: 0 0 20px rgba(255, 235, 59, 0.4); }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Pulse animation for Live Dot */
+@keyframes pulsar { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+.live-dot { display: inline-block; width: 8px; height: 8px; background: var(--s2); border-radius: 50%; margin-right: 6px; box-shadow: 0 0 8px var(--s2); animation: pulsar 2s infinite; }
+
+@media (max-width:1240px){ .kpis{grid-template-columns:repeat(3,1fr)} .g3{grid-template-columns:1fr} }
+@media (max-width:860px){ .g2{grid-template-columns:1fr} .kpis{grid-template-columns:repeat(2,1fr)} .wrap{padding:22px 14px 56px} h1{font-size:21px} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} .card{opacity:1; transform:none} }
+</style>
+</head>
+<body>
+<div id="loading-overlay" aria-live="assertive"><div class="spinner"></div><div>Generating HD Report...</div></div>
+
+<div class="wrap">
+    <header class="topo">
+      <div class="marca">
+        <div class="selo" aria-hidden="true"><i class="fas fa-hamburger"></i></div>
+        <div>
+          <h1>BiteSpeed Eats USA</h1>
+          <div class="sub" id="sub-header" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="top-utils">
+        <div class="periodo"><span class="live-dot"></span> <span id="periodo-txt"></span></div>
+        <button class="btn-util" onclick="toggleFS()" aria-label="Toggle Fullscreen"><i class="fas fa-expand"></i> Fullscreen</button>
+        <button class="btn-util destaque" onclick="exportPDF()" aria-label="Export to PDF"><i class="fas fa-file-pdf"></i> Export HD PDF</button>
+      </div>
+    </header>
+
+    <div class="filtros-container">
+        <div class="rotulo-secao" style="margin-top:0;">Delivery Mode Segmentation (Multi-Select)</div>
+        <div class="seg-grupo" id="filtros" role="group" aria-label="Filter by delivery methods">
+            <button class="seg-btn on" data-f="car" aria-pressed="true">Car Delivery</button>
+            <button class="seg-btn on" data-f="scooter" aria-pressed="true">Scooter</button>
+            <button class="seg-btn on" data-f="bike" aria-pressed="true">Bicycle</button>
+        </div>
+    </div>
+
+    <!-- 1. KPIs (MOVED TO TOP FOR EXECUTIVE FOCUS) -->
+    <div class="rotulo-secao">Platform Real-Time Performance</div>
+    <div class="kpis" id="kpis" aria-live="polite"></div>
+    <p class="nota-base" id="nota-base"></p>
+
+    <!-- 2. AI COMMAND CENTER & PIPELINE FUNNEL -->
+    <div class="secao grade g2">
+      <!-- NEW ACTIONABLE INSIGHTS PANEL -->
+      <section class="card agir" data-anim aria-labelledby="insights-heading">
+        <div class="cab">
+          <h2 id="insights-heading"><span class="live-dot"></span> AI Command Center</h2>
+          <span class="dica">Live anomaly detection & operational escalations</span>
+        </div>
+        <div class="acoes" id="acoes"></div>
+      </section>
+
+      <!-- FUNNEL MOVED UP TO PAIR WITH ALERTS -->
+      <section class="card" data-anim>
+        <div class="cab"><h2>Order Lifecycle Funnel</h2><span class="dica">Milestones by completion timestamp</span></div>
+        <svg class="plot" id="svg-funil" role="img" aria-label="Conversion pipeline chart"></svg>
+        <p class="leitura" id="ler-funil"></p>
+      </section>
+    </div>
+
+    <!-- 3. TRENDS -->
+    <div class="secao grade g2">
+      <section class="card" data-anim>
+        <div class="cab">
+          <h2>Gross Merchandise Value (GMV) Trend</h2>
+          <div class="alterna" role="group" aria-label="Chart Format Toggle">
+            <button id="bt-graf" aria-pressed="true">Chart</button>
+            <button id="bt-tab" aria-pressed="false">Table</button>
+          </div>
+        </div>
+        <div id="graf-receita"><svg class="plot" id="svg-receita" role="img" aria-label="GMV Line Chart"></svg></div>
+        <div id="tab-mensal" class="oculto rolagem" style="max-height:300px;overflow-y:auto"></div>
+        <p class="leitura" id="ler-receita"></p>
+      </section>
+      <section class="card" data-anim>
+        <div class="cab"><h2>Total Active Orders Volume</h2><span class="dica">Independent axis</span></div>
+        <svg class="plot" id="svg-leads" role="img" aria-label="Orders volume over time"></svg>
+        <p class="leitura" id="ler-leads"></p>
+      </section>
+    </div>
+
+    <!-- 4. MONEY & ROUTES (FULL WIDTH SCATTER) -->
+    <div class="rotulo-secao">Cost Distribution & Route Efficiency</div>
+    <section class="card secao" data-anim>
+      <div class="cab">
+        <h2>Restaurant Route Quadrants — Volume × On-Time Rate</h2>
+        <span class="dica">X-Axis: Orders · Y-Axis: On-Time % · Bubble Size: Acquisition/Driver Cost</span>
+      </div>
+      <svg class="plot" id="svg-quadrantes" role="img" aria-label="Scatter plot for route quadrants"></svg>
+      <div class="chave" id="chave-quadrantes"></div>
+      <p class="leitura" id="ler-quadrantes"></p>
+    </section>
+
+    <!-- 5. DELAYS & SATISFACTION -->
+    <div class="secao grade g2">
+      <section class="card" data-anim>
+        <div class="cab"><h2>Operational Bottlenecks & SLA Breaches</h2><span class="dica" id="dica-perdas"></span></div>
+        <svg class="plot" id="svg-perdas" role="img" aria-label="Bar chart showing refund causes"></svg>
+        <p class="leitura" id="ler-perdas"></p>
+      </section>
+      <section class="card" data-anim>
+        <div class="cab"><h2>Delivery Time vs Client Satisfaction</h2><span class="dica">Highest correlated metric for repeat business</span></div>
+        <svg class="plot" id="svg-velocidade" role="img" aria-label="Delivery time distribution chart"></svg>
+        <p class="leitura" id="ler-velocidade"></p>
+      </section>
+    </div>
+
+    <!-- 6. TEAMS & MODES -->
+    <div class="secao grade g2">
+      <section class="card" data-anim>
+        <div class="cab"><h2>Target vs Actual by Zone</h2><span class="dica">Bar = Actual GMV · Marker = Target</span></div>
+        <svg class="plot" id="svg-equipes" role="img" aria-label="Target actual comparison by zone"></svg>
+        <p class="leitura" id="ler-equipes"></p>
+      </section>
+      <section class="card" data-anim>
+        <div class="cab"><h2>Modes: Cost, GMV & Margin</h2><span class="dica">Independent scales side-by-side</span></div>
+        <svg class="plot" id="svg-canais" role="img" aria-label="Financials by delivery mode"></svg>
+        <p class="leitura" id="ler-canais"></p>
+      </section>
+    </div>
+
+    <!-- 7. STATES & TIERS -->
+    <div class="secao grade g2">
+      <section class="card" data-anim>
+        <div class="cab"><h2>GMV by State</h2><span class="dica" id="dica-estados"></span></div>
+        <svg class="plot" id="svg-estados" role="img" aria-label="Bar chart by state"></svg>
+        <p class="leitura" id="ler-estados"></p>
+      </section>
+      <section class="card" data-anim>
+        <div class="cab"><h2>Delivery Cost & Volume by Service Tier</h2><span class="dica">Service Tier Breakdown</span></div>
+        <svg class="plot" id="svg-tipos" role="img" aria-label="Service tier cost breakdown"></svg>
+        <p class="leitura" id="ler-tipos"></p>
+      </section>
+    </div>
+
+    <!-- 8. AUDIT TABLE -->
+    <section class="card secao" data-anim>
+      <div class="cab">
+        <h2>Zone Audit — Driver Cost, Margin & Strategic Decision</h2>
+        <span class="dica" id="dica-tabela"></span>
+      </div>
+      <div class="rolagem"><table id="tab-campanhas"></table></div>
+      <p class="leitura" id="ler-campanhas"></p>
+    </section>
+
+    <footer id="rodape"></footer>
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+/* 
+  Data Architecture: 
+  - Dynamic Aggregation: Calculates KPIs & distributions organically based on active filters, 
+    yielding non-linear, realistic mathematical shape-shifting instead of fake flat multipliers.
+*/
+const D_BASE = {
+ "premissas": { "margem_bruta": 0.25, "roas_equilibrio": 0.15 },
+ "periodo": { "atual": "2026", "anterior": "2025", "inicio": "01/01/2025", "fim": "12/31/2026" },
+ "kpis": [
+  { "id": "receita", "rotulo": "Total GMV", "valor": 42187126.91, "formato": "moeda_curta", "var": { "delta": 0.0915, "bom": true }, "anterior": 38607220.72 },
+  { "id": "vendas", "rotulo": "Total Orders", "valor": 125780, "formato": "inteiro", "var": { "delta": 0.0825, "bom": true }, "anterior": 116200 },
+  { "id": "ticket", "rotulo": "Avg Order Value", "valor": 32.40, "formato": "moeda", "var": { "delta": 0.0482, "bom": true }, "anterior": 30.91 },
+  { "id": "conversao", "rotulo": "On-Time Delivery", "valor": 0.942, "formato": "percentual", "var": { "delta": 0.0266, "bom": true }, "anterior": 0.917 },
+  { "id": "cac", "rotulo": "Avg Delivery Time", "valor": 28.4, "formato": "minutos", "var": { "delta": -0.112, "bom": true }, "anterior": 31.8 },
+  { "id": "roas", "rotulo": "Support Escalation Rate", "valor": 0.012, "formato": "percentual_inverso", "var": { "delta": -0.0029, "bom": true }, "anterior": 0.015 }
+ ],
+ "totais": { "leads": 135400, "receita": 80794347.62, "vendas": 125780, "ticket": 32.40, "conversao": 0.942, "investimento": 22942000.04, "cac": 28.4, "roas": 0.012 },
+ "mensal": {
+  "meses": ["2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09","2026-10","2026-11","2026-12"],
+  "receita": [2725331,3135495,3023174,3469994,3691680,3252410,2359966,2844670,3082290,3434709,3709175,4278322,2681524,3242494,4560252,3393791,3126053,2724976,3962687,4013144,3893596,3076398,3704467,2007738],
+  "receita_tendencia": [3006077,3028716,3051356,3073995,3096635,3119274,3141914,3164553,3187193,3209832,3232471,3255111,3277750,3300390,3323029,3345669,3368308,3390948,3413587,3436227,3458866,3481506,3504145,3526785],
+  "vendas": [4524,4368,4463,4371,4260,4156,4242,4352,4363,4472,4476,4380,4655,4475,4581,4463,4366,4250,4373,4388,4477,4566,4470,4423],
+  "leads_tendencia": [4556,4560,4563,4567,4570,4574,4577,4580,4584,4587,4591,4594,4598,4601,4605,4608,4612,4615,4618,4622,4625,4629,4632,4636],
+  "investimento": [1187237,1140623,1148111,1147642,1121302,1111483,1120131,1127192,1147588,1169939,1159542,1141178,1217693,1185579,1189483,1148958,1148235,1134775,1149451,1128220,1153322,1154551,1139905,1134849],
+  "parcial": 23,
+  "leads": []
+ },
+ "funil": [
+  { "etapa": "Order Placed", "qtd": 135400, "pct_total": 1.0, "pct_anterior": null, "perda": null },
+  { "etapa": "Sent to Kitchen", "qtd": 133380, "pct_total": 0.985, "pct_anterior": 0.985, "perda": 2020 },
+  { "etapa": "Driver Assigned", "qtd": 131920, "pct_total": 0.974, "pct_anterior": 0.989, "perda": 1460 },
+  { "etapa": "Picked Up", "qtd": 130140, "pct_total": 0.961, "pct_anterior": 0.986, "perda": 1780 },
+  { "etapa": "Near Drop-off", "qtd": 127030, "pct_total": 0.938, "pct_anterior": 0.976, "perda": 3110 },
+  { "etapa": "Delivered", "qtd": 125780, "pct_total": 0.928, "pct_anterior": 0.990, "perda": 1250 }
+ ],
+ "gargalo": { "etapa": "Near Drop-off", "taxa": 0.976, "etapa_anterior": "Picked Up", "vendas_extra": 3110, "receita_extra": 558000.00 },
+ "campanhas": [
+  { "campanha": "Downtown - Peak", "canal": "Scooter", "vendas": 8800, "conversao": 0.972, "investimento": 1399600.0, "receita": 2136946.75, "roas": 0.34, "decisao": "Escalar" },
+  { "campanha": "Suburbs - Dinner", "canal": "Car Delivery", "vendas": 11500, "conversao": 0.968, "investimento": 1350932.8, "receita": 1808759.23, "roas": 0.25, "decisao": "Escalar" },
+  { "campanha": "Campus - Late Night", "canal": "Bicycle", "vendas": 14200, "conversao": 0.896, "investimento": 1332405.71, "receita": 1694759.19, "roas": 0.21, "decisao": "Manter" },
+  { "campanha": "Metro - Lunch", "canal": "Scooter", "vendas": 4100, "conversao": 0.893, "investimento": 299314.66, "receita": 609151.34, "roas": 0.50, "decisao": "Manter" },
+  { "campanha": "Suburbs - Weekend", "canal": "Car Delivery", "vendas": 8700, "conversao": 0.962, "investimento": 672348.68, "receita": 974845.32, "roas": 0.31, "decisao": "Manter" },
+  { "campanha": "Downtown - Rain", "canal": "Bicycle", "vendas": 2600, "conversao": 0.878, "investimento": 869920.64, "receita": 963871.6, "roas": 0.09, "decisao": "Cortar" },
+  { "campanha": "Outskirts - Night", "canal": "Car Delivery", "vendas": 3100, "conversao": 0.846, "investimento": 436825.6, "receita": 508634.27, "roas": 0.14, "decisao": "Cortar" },
+  { "campanha": "Business Dist - Lunch", "canal": "Scooter", "vendas": 1800, "conversao": 0.962, "investimento": 590891.49, "receita": 8354489.48, "roas": 0.93, "decisao": "Escalar" }
+ ],
+ "canais": [
+  { "canal": "Car Delivery", "vendas": 44990, "conversao": 0.950, "investimento": 4901790.86, "receita": 6799737.99, "roas": 0.27 },
+  { "canal": "Scooter", "vendas": 28395, "conversao": 0.974, "investimento": 7631190.04, "receita": 10879456.9, "roas": 0.29 },
+  { "canal": "Bicycle", "vendas": 11310, "conversao": 0.876, "investimento": 1549450.0, "receita": 2132363.29, "roas": 0.27 }
+ ],
+ "equipes": [
+  { "equipe": "Metro Zone East", "meta": 21596160.0, "realizado": 25008049.09, "atingimento": 1.1579, "vendas": 68900, "meta_vendas": 65500, "mediana_horas": 25, "conversao": 0.962 },
+  { "equipe": "Central Hub", "meta": 20459520.0, "realizado": 22169379.82, "atingimento": 1.083, "vendas": 43300, "meta_vendas": 42000, "mediana_horas": 31, "conversao": 0.940 },
+  { "equipe": "Metro Zone West", "meta": 19891200.0, "realizado": 17216918.72, "atingimento": 0.865, "vendas": 39200, "meta_vendas": 45000, "mediana_horas": 48, "conversao": 0.888 }
+ ],
+ "estados": [
+  { "uf": "NY", "vendas": 13381, "receita": 12266112.62, "conversao": 0.970, "ticket": 38.68 },
+  { "uf": "CA", "vendas": 10191, "receita": 9491636.65, "conversao": 0.879, "ticket": 42.37 },
+  { "uf": "TX", "vendas": 10537, "receita": 8775829.93, "conversao": 0.947, "ticket": 32.85 },
+  { "uf": "FL", "vendas": 8298, "receita": 6458945.07, "conversao": 0.935, "ticket": 28.37 },
+  { "uf": "IL", "vendas": 7817, "receita": 5195964.29, "conversao": 0.958, "ticket": 24.69 },
+  { "uf": "PA", "vendas": 7515, "receita": 4926789.49, "conversao": 0.945, "ticket": 25.59 }
+ ],
+ "tipos": [
+  { "tipo": "Priority (Direct)", "vendas": 36393, "receita": 29621288.99, "ticket": 42.92, "conversao": 0.969, "investimento": 10507065.11, "share_invest": 0.4635 },
+  { "tipo": "Standard", "vendas": 63942, "receita": 16842840.36, "ticket": 28.40, "conversao": 0.941, "investimento": 8197832.72, "share_invest": 0.4093 },
+  { "tipo": "Saver / Grouped", "vendas": 15179, "receita": 7930218.28, "ticket": 22.44, "conversao": 0.855, "investimento": 4584598.06, "share_invest": 0.1271 }
+ ]
+};
+
+const MODE_PROFILES = {
+    car: { vol: 0.55, aov: 40.00, otif: 0.910, time: 34.0, claim: 0.015 },
+    scooter: { vol: 0.30, aov: 25.00, otif: 0.970, time: 24.0, claim: 0.009 },
+    bike: { vol: 0.15, aov: 19.33, otif: 0.990, time: 16.66, claim: 0.007 }
+};
+
+const CURVES = {
+    car: [1.0, 1.0, 1.0, 0.9, 0.9, 0.9, 0.8, 0.8, 0.9, 1.1, 1.2, 1.3, 1.0, 1.0, 1.0, 0.9, 0.9, 0.9, 0.8, 0.8, 0.9, 1.1, 1.2, 1.3],
+    scooter: [0.8, 0.9, 1.0, 1.1, 1.2, 1.2, 1.2, 1.1, 1.0, 0.9, 0.8, 0.8, 0.8, 0.9, 1.0, 1.1, 1.2, 1.2, 1.2, 1.1, 1.0, 0.9, 0.8, 0.8],
+    bike: [0.6, 0.7, 0.9, 1.1, 1.3, 1.4, 1.4, 1.2, 1.0, 0.8, 0.6, 0.5, 0.6, 0.7, 0.9, 1.1, 1.3, 1.4, 1.4, 1.2, 1.0, 0.8, 0.6, 0.5]
+};
+
+const JITTER = [1.02, 0.98, 1.05, 0.96, 1.01, 0.99, 1.04, 0.97, 1.03, 0.95, 1.06, 0.99, 1.02, 0.98, 1.05, 0.96, 1.01, 0.99, 1.04, 0.97, 1.03, 0.95, 1.06, 0.99];
+
+const MOTIVOS = {
+    car: { "Traffic Delay": 0.45, "Restaurant Delay": 0.25, "Driver Unassigned": 0.15, "Customer Unreachable": 0.08, "Spilled/Damaged": 0.04, "Wrong Address": 0.03 },
+    scooter: { "Driver Unassigned": 0.40, "Restaurant Delay": 0.35, "Spilled/Damaged": 0.10, "Traffic Delay": 0.08, "Customer Unreachable": 0.05, "Wrong Address": 0.02 },
+    bike: { "Restaurant Delay": 0.45, "Customer Unreachable": 0.20, "Spilled/Damaged": 0.18, "Wrong Address": 0.12, "Traffic Delay": 0.03, "Driver Unassigned": 0.02 }
+};
+
+const VELOCIDADE_BASE = [
+    { "faixa": "< 15 Mins", weight: { car: 0.05, scooter: 0.20, bike: 0.40 }, conversao: 0.989 },
+    { "faixa": "15-30 Mins", weight: { car: 0.25, scooter: 0.45, bike: 0.45 }, conversao: 0.959 },
+    { "faixa": "30-45 Mins", weight: { car: 0.40, scooter: 0.25, bike: 0.10 }, conversao: 0.915 },
+    { "faixa": "45-60 Mins", weight: { car: 0.20, scooter: 0.08, bike: 0.04 }, conversao: 0.845 },
+    { "faixa": "> 60 Mins", weight: { car: 0.10, scooter: 0.02, bike: 0.01 }, conversao: 0.715 }
+];
+
+let D = {};
+
+function updateDataModel() {
+    if (activeFilters.length === 0) activeFilters = ['car', 'scooter', 'bike']; // Fallback preventing div-by-zero
+    
+    let tVol = 0, tAov = 0, tOtif = 0, tTime = 0, tClaim = 0;
+    activeFilters.forEach(f => {
+        let p = MODE_PROFILES[f];
+        tVol += p.vol;
+        tAov += p.aov * p.vol;
+        tOtif += p.otif * p.vol;
+        tTime += p.time * p.vol;
+        tClaim += p.claim * p.vol;
+    });
+    
+    let rAov = tAov / tVol;
+    let rOtif = tOtif / tVol;
+    let rTime = tTime / tVol;
+    let rClaim = tClaim / tVol;
+
+    // Deep clone to reset state for calculations
+    D = JSON.parse(JSON.stringify(D_BASE));
+
+    // KPIs Total
+    D.totais.vendas = D_BASE.totais.vendas * tVol;
+    D.totais.receita = D.totais.vendas * rAov;
+    D.totais.ticket = rAov;
+    D.totais.conversao = rOtif;
+    D.totais.cac = rTime;
+    D.totais.roas = rClaim;
+    D.totais.investimento = D.totais.receita * 0.72;
+
+    D.kpis[0].valor = D.totais.receita; D.kpis[0].anterior = D.totais.receita * 0.91; 
+    D.kpis[1].valor = D.totais.vendas;  D.kpis[1].anterior = D.totais.vendas * 0.92;
+    D.kpis[2].valor = rAov;             D.kpis[2].anterior = rAov * 0.95;
+    D.kpis[3].valor = rOtif;            D.kpis[3].anterior = rOtif * 0.98;
+    D.kpis[4].valor = rTime;            D.kpis[4].anterior = rTime * 1.1; 
+    D.kpis[5].valor = rClaim;           D.kpis[5].anterior = rClaim * 1.15;
+
+    // Line Charts - Non-linear shape generation based on cohort profiles and deterministic jitter
+    for(let i=0; i<24; i++) {
+        let pVol = 0;
+        activeFilters.forEach(f => pVol += MODE_PROFILES[f].vol * CURVES[f][i]);
+        
+        D.mensal.vendas[i] = D_BASE.mensal.vendas[i] * pVol;
+        D.mensal.leads[i] = D.mensal.vendas[i] / rOtif; 
+        D.mensal.receita[i] = D.mensal.vendas[i] * rAov * JITTER[i]; 
+        D.mensal.investimento[i] = D.mensal.receita[i] * 0.72; 
+        
+        D.mensal.receita_tendencia[i] = D.mensal.receita_tendencia[i] * (tVol * rAov / 32.40); 
+        D.mensal.leads_tendencia[i] = D.mensal.leads_tendencia[i] * tVol;
+    }
+
+    // Funnel Execution
+    D.funil[0].qtd = D.totais.vendas / rOtif;
+    D.funil[1].qtd = D.funil[0].qtd * 0.985;
+    D.funil[2].qtd = D.funil[1].qtd * 0.989;
+    D.funil[3].qtd = D.funil[2].qtd * 0.986;
+    D.funil[4].qtd = D.funil[3].qtd * (rOtif + 0.034); 
+    D.funil[5].qtd = D.totais.vendas;
+    
+    D.funil.forEach((e,i)=>{
+        e.pct_total = e.qtd / D.funil[0].qtd;
+        if(i>0) e.pct_anterior = e.qtd / D.funil[i-1].qtd;
+        if(i>0) e.perda = D.funil[i-1].qtd - e.qtd;
+    });
+
+    // Segmented Modes (Canais/Campanhas)
+    const modeMap = { 'car': 'Car Delivery', 'scooter': 'Scooter', 'bike': 'Bicycle' };
+    let activeModeNames = activeFilters.map(f => modeMap[f]);
+    D.canais = D_BASE.canais.filter(c => activeModeNames.includes(c.canal));
+    D.campanhas = D_BASE.campanhas.filter(c => activeModeNames.includes(c.canal));
+
+    // Dynamic AI Command Center Operational Insights
+    D.acoes = [];
+    if (activeFilters.includes('car')) D.acoes.push({ "titulo": "Reduce 'Cold Food' Complaints", "detalhe": `${int(D.totais.vendas * 0.08)} car orders trapped in traffic exceptions causing SLA breaches.`, "premissa": "Proactive restaurant throttling during rush hour reduces exception duration", "impacto": D.totais.receita * 0.03, "prazo": "45 days", "evidencia": "SLA chart confirms < 75% satisfaction for >45 mins" });
+    if (activeFilters.includes('scooter')) D.acoes.push({ "titulo": "Reallocate Driver Incentives", "detalhe": `Downtown Rain zones consuming driver bonuses with Margin < 15%.`, "premissa": "Shifting bonuses to high-density areas prevents loss and lowers support escalation rates", "impacto": D.totais.receita * 0.02, "prazo": "immediate", "evidencia": "Zone Audit table shows critical margin deficits" });
+    if (activeFilters.includes('bike')) D.acoes.push({ "titulo": "Optimize Complex Drop-offs", "detalhe": `${int(D.totais.vendas * 0.05)} bike orders delayed navigating complex apartment complexes.`, "premissa": "Updating driver app with precise geo-pins decreases active support ticket time", "impacto": D.totais.receita * 0.015, "prazo": "30 days", "evidencia": "Drop-off from 96.1% to 93.8% occurs specifically at last mile" });
+    if(D.acoes.length < 3) D.acoes.push({ "titulo": "Expand Ghost Kitchen Coverage", "detalhe": `Suburban areas showing higher than normal unassigned drivers.`, "premissa": "Incentivize local pickup-only locations to balance delivery load", "impacto": D.totais.receita * 0.01, "prazo": "60 days", "evidencia": "Delivery heatmap shows gap in operational supply" });
+    D.acoes = D.acoes.slice(0,3);
+
+    // Speed Distribution based on active modal weights
+    D.velocidade = VELOCIDADE_BASE.map(tier => {
+        let tierWeight = 0;
+        activeFilters.forEach(f => tierWeight += tier.weight[f] * MODE_PROFILES[f].vol);
+        let normalizedTierPct = tierWeight / tVol; 
+        let vendasTier = D.totais.vendas * normalizedTierPct;
+        return {
+            faixa: tier.faixa,
+            vendas: vendasTier,
+            conversao: tier.conversao,
+            receita: vendasTier * rAov,
+            investimento: vendasTier * rAov * 0.72
+        };
+    });
+    D.velocidade_resumo = { conv_1h: D.velocidade[0].conversao, conv_24h: D.velocidade[4].conversao };
+
+    // Dynamic SLA Delay Motives mapped against delivery type
+    D.total_perdidos = D.totais.vendas * (1 - rOtif);
+    let mergedMotivos = {};
+    activeFilters.forEach(f => {
+       Object.entries(MOTIVOS[f]).forEach(([k, v]) => { mergedMotivos[k] = (mergedMotivos[k] || 0) + (v * MODE_PROFILES[f].vol); });
+    });
+    let totalMotivoWeight = Object.values(mergedMotivos).reduce((a,b)=>a+b, 0);
+    D.motivos_perda = Object.entries(mergedMotivos).map(([k, v]) => {
+       let pct = v / totalMotivoWeight;
+       return { motivo: k, pct: pct, qtd: D.total_perdidos * pct };
+    }).sort((a,b) => b.pct - a.pct);
+
+    // Scale Teams, States, Tiers
+    D.equipes.forEach(e => {
+        e.vendas = e.vendas * tVol;
+        e.realizado = e.vendas * rAov;
+        e.meta = e.meta * tVol * rAov / 32.40;
+        e.atingimento = e.realizado / e.meta;
+    });
+    D.estados.forEach(e => {
+        e.vendas = e.vendas * tVol;
+        e.receita = e.vendas * rAov;
+    });
+    let totalInvest = 0;
+    D.tipos.forEach(t => {
+        t.vendas = t.vendas * tVol;
+        t.receita = t.vendas * rAov;
+        t.investimento = t.receita * 0.72;
+        totalInvest += t.investimento;
+    });
+    D.tipos.forEach(t => t.share_invest = t.investimento / totalInvest);
+    
+    // Cutting zones evaluation
+    D.cortar = { qtd: D.campanhas.filter(c=>c.decisao==='Cortar').length, investimento: D.totais.investimento * 0.05, receita: D.totais.receita * 0.03 };
+}
+
+// Formats
+const nf = (d=0)=> new Intl.NumberFormat('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const int = v => nf(0).format(Math.round(v));
+const moeda = v => '$' + nf(0).format(Math.round(v));
+const pct = (v,d=1) => nf(d).format(v*100) + '%';
+const pct_inverso = (v,d=1) => nf(d).format(v*100) + '%'; 
+const minutos = v => nf(1).format(v) + ' m';
+const mult = v => nf(2).format(v) + '%'; 
+function moedaCurta(v){
+  const a = Math.abs(v);
+  if (a >= 1e9) return '$' + nf(2).format(v/1e9) + 'B';
+  if (a >= 1e6) return '$' + nf(1).format(v/1e6) + 'M';
+  if (a >= 1e3) return '$' + nf(0).format(v/1e3) + 'k';
+  return moeda(v);
+}
+const FMT = {moeda, moeda_curta:moedaCurta, percentual:pct, percentual_inverso:pct_inverso, multiplo:mult, inteiro:int, minutos:minutos};
+const MES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const rotMes = s => { const [a,m] = s.split('-'); return MES[+m-1] + '/' + a.slice(2); };
+
+// SVG Utils
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs={}, pai=null){
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] !== null && attrs[k] !== undefined) n.setAttribute(k, attrs[k]);
+  if (pai) pai.appendChild(n);
+  return n;
+}
+function txt(pai, x, y, s, cls='eixo-txt', extra={}){
+  const t = el('text', Object.assign({x, y, class:cls}, extra), pai);
+  t.textContent = s; return t;
+}
+function limpar(id){ const s = document.getElementById(id); s.innerHTML = ''; return s; }
+function grad(defs, id, paradas, vertical=true){
+  const g = el('linearGradient', {id, x1:0, y1:vertical?0:0, x2:vertical?0:1, y2:vertical?1:0}, defs);
+  paradas.forEach(p => el('stop', {offset:p[0], 'stop-color':p[1], 'stop-opacity':p[2]??1}, g));
+  return `url(#${id})`;
+}
+function brilho(defs, id, cor, forca=3){
+  const f = el('filter', {id, x:'-60%', y:'-60%', width:'220%', height:'220%'}, defs);
+  el('feDropShadow', {dx:0, dy:0, stdDeviation:forca, 'flood-color':cor, 'flood-opacity':.75}, f);
+  return `url(#${id})`;
+}
+function anim(no, tipo, atraso=0){
+  no.classList.add('an', 'an-' + tipo);
+  no.style.animationDelay = atraso.toFixed(2) + 's';
+  return no;
+}
+function escala(maximo, alvo=4){
+  if (!(maximo > 0)) return {max:1, passos:[0,1]};
+  const bruto = maximo/alvo, mag = Math.pow(10, Math.floor(Math.log10(bruto)));
+  const passo = [1,2,2.5,5,10].map(m=>m*mag).find(v => v >= bruto - 1e-9) ?? 10*mag;
+  const topo = Math.ceil(maximo/passo)*passo;
+  const passos = []; for (let v=0; v<=topo+1e-9; v+=passo) passos.push(v);
+  return {max:topo, passos};
+}
+
+// Tooltip
+const tip = document.getElementById('tip');
+function mostrarTip(e, titulo, linhas){
+  tip.innerHTML = `<div class="t">${titulo}</div>` + linhas.map(l => `<div class="l"><span>${l[0]}</span><b>${l[1]}</b></div>`).join('');
+  tip.classList.add('on'); moverTip(e);
+}
+function moverTip(e){
+  const r = tip.getBoundingClientRect();
+  let x = e.clientX + 16, y = e.clientY - r.height - 12;
+  if (x + r.width > innerWidth - 10) x = e.clientX - r.width - 16;
+  if (y < 10) y = e.clientY + 18;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+function esconderTip(){ tip.classList.remove('on'); }
+function ligarTip(no, titulo, linhas){
+  no.style.cursor = 'default';
+  no.addEventListener('mouseenter', e => mostrarTip(e, titulo, linhas));
+  no.addEventListener('mousemove', moverTip);
+  no.addEventListener('mouseleave', esconderTip);
+}
+
+// Segmented Multipliers Action Binding
+let activeFilters = ['car', 'scooter', 'bike'];
+
+document.querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const filter = this.getAttribute('data-f');
+        if (this.classList.contains('on')) {
+            if (activeFilters.length > 1) {
+                this.classList.remove('on');
+                this.setAttribute('aria-pressed', 'false');
+                activeFilters = activeFilters.filter(f => f !== filter);
+            }
+        } else {
+            this.classList.add('on');
+            this.setAttribute('aria-pressed', 'true');
+            activeFilters.push(filter);
+        }
+        updateDataModel();
+        renderDashboard();
+    });
+});
+
+function renderDashboard() {
+    renderHeader();
+    renderAcoes(); 
+    renderKPIs();
+    renderAreaCharts();
+    renderFunil();
+    renderVelocidade();
+    renderPerdas();
+    renderEquipes();
+    renderQuadrantes();
+    renderCanais();
+    renderEstados();
+    renderTipos();
+    renderTabela();
+    renderTextosInsights();
+
+    setTimeout(() => {
+        document.querySelectorAll('.card').forEach((c, i) => {
+            c.style.transitionDelay = (i * 40) + 'ms';
+            c.classList.add('vis');
+        });
+    }, 50);
+}
+
+function renderHeader() {
+  document.getElementById('periodo-txt').textContent = D.periodo.inicio + ' to ' + D.periodo.fim;
+  document.getElementById('sub-header').innerHTML = `${int(D.totais.vendas)} orders · ${moedaCurta(D.totais.receita)} GMV · On-Time ${pct(D.totais.conversao)} — comparative <b style="color:var(--ink-1)">${D.periodo.atual} vs ${D.periodo.anterior}</b>`;
+}
+
+function renderAcoes() {
+  const icons = ['fa-route', 'fa-coins', 'fa-temperature-low'];
+  const colors = ['var(--s3)', 'var(--s2)', 'var(--s1)'];
+  
+  document.getElementById('acoes').innerHTML = D.acoes.map((a,i) => `
+  <article class="alerta-card" tabindex="0" aria-label="${a.titulo}. Priority ${i+1}">
+    <div class="alerta-icon" style="color:${colors[i]}; border-color:${colors[i]}">
+        <i class="fas ${icons[i]}"></i>
+    </div>
+    <div class="alerta-content">
+        <div class="alerta-header">
+            <span class="badge" style="background:${colors[i]}20; color:${colors[i]}; border: 1px solid ${colors[i]}50">${a.prazo}</span>
+            <h4>${a.titulo}</h4>
+        </div>
+        <p class="alerta-desc">${a.detalhe}</p>
+        <div class="alerta-footer">
+            <div class="alerta-impacto">
+                <span>Value Recovery:</span> <b>${moedaCurta(a.impacto)}</b>
+            </div>
+            <div class="alerta-action">
+                <button style="border-color:${colors[i]}60; color:${colors[i]}">Resolve <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+    </div>
+  </article>`).join('');
+  
+  document.getElementById('dica-perdas').textContent = int(D.total_perdidos) + ' delayed orders';
+  document.getElementById('dica-estados').textContent = D.estados.length + ' States';
+}
+
+function renderKPIs() {
+  const faiscas = {
+    receita: D.mensal.receita, vendas: D.mensal.vendas, leads: D.mensal.leads,
+    conversao: D.mensal.meses.map((_,i)=> D.mensal.leads[i] ? D.mensal.vendas[i]/D.mensal.leads[i] : 0),
+    cac: D.mensal.meses.map((_,i)=> D.mensal.vendas[i] ? D.mensal.investimento[i]/D.mensal.vendas[i] : 0),
+    roas: D.mensal.meses.map((_,i)=> D.mensal.investimento[i] ? D.mensal.receita[i]/D.mensal.investimento[i] : 0),
+    ticket: D.mensal.meses.map((_,i)=> D.mensal.vendas[i] ? D.mensal.receita[i]/D.mensal.vendas[i] : 0),
+  };
+  
+  document.getElementById('kpis').innerHTML = D.kpis.map(k => {
+    const valorDisplay = k.valor;
+    const anteriorDisplay = k.anterior;
+    const f = FMT[k.formato];
+    const v = k.var;
+    const isBom = (k.id === 'cac' || k.id === 'roas') ? (valorDisplay <= anteriorDisplay) : (valorDisplay >= anteriorDisplay);
+    const delta = Math.abs(valorDisplay - anteriorDisplay) / anteriorDisplay;
+    const seta = (valorDisplay >= anteriorDisplay) ? '▲' : '▼';
+
+    return `<section class="card kpi" data-anim tabindex="0" aria-label="${k.rotulo}: ${f(valorDisplay)}">
+      <div class="rot">${k.rotulo}</div>
+      <div class="num" data-alvo="${valorDisplay}" data-fmt="${k.formato}">${f(valorDisplay)}</div>
+      <div class="pe">
+        <span class="delta ${isBom?'bom':'ruim'}">${seta} ${nf(1).format(delta*100)}%</span>
+        <span>vs ${D.periodo.anterior} (${f(anteriorDisplay)})</span>
+      </div>
+      <svg class="faisca" data-serie="${k.id}" aria-hidden="true"></svg>
+    </section>`;
+  }).join('');
+
+  document.querySelectorAll('.faisca').forEach(svg => {
+    svg.innerHTML = '';
+    let serie = faiscas[svg.dataset.serie]; if (!serie) return;
+    serie = serie.slice(0, D.mensal.parcial); 
+    const W = 220, H = 26, mn = Math.min(...serie), mx = Math.max(...serie), amp = (mx-mn)||1;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio','none');
+    const defs = el('defs', {}, svg);
+    const gid = 'fg' + svg.dataset.serie;
+    const fill = grad(defs, gid, [[0,'#ffeb3b',.42],[1,'#ffeb3b',0]]);
+    const px = serie.map((v,i) => [i/(serie.length-1)*W, H-2 - (v-mn)/amp*(H-6)]);
+    const d = px.map((p,i)=> (i?'L':'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    el('path', {d: d + ` L ${W} ${H} L 0 ${H} Z`, fill}, svg);
+    el('path', {d, fill:'none', stroke:'#ffeb3b', 'stroke-width':1.5, 'stroke-linejoin':'round', opacity:.95}, svg);
+  });
+}
+
+function renderAreaCharts() {
+  function areaChart(idSvg, meses, valores, tend, fmt, corGlow, rotEixo){
+    const svg = limpar(idSvg);
+    const W = 780, H = 300, mar = {t:34, r:24, b:34, l:78};
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const iw = W-mar.l-mar.r, ih = H-mar.t-mar.b;
+    const esc = escala(Math.max(...valores, ...tend), 4);
+    const X = i => mar.l + i/(valores.length-1)*iw;
+    const Y = v => mar.t + ih - v/esc.max*ih;
+    const defs = el('defs', {}, svg);
+    const fill = grad(defs, idSvg+'-f', [[0,corGlow,.55],[.55,corGlow,.18],[1,corGlow,0]]);
+    const gl = brilho(defs, idSvg+'-g', corGlow, 3.4);
+    const iPar = D.mensal.parcial;
+
+    esc.passos.forEach(v => {
+      const y = Y(v);
+      el('line', {x1:mar.l, x2:W-mar.r, y1:y, y2:y, class:'linha-grid'}, svg);
+      txt(svg, mar.l-10, y+4, fmt(v), 'eixo-txt', {'text-anchor':'end'});
+    });
+    el('line', {x1:mar.l, x2:W-mar.r, y1:mar.t+ih, y2:mar.t+ih, class:'linha-eixo'}, svg);
+
+    const dLinha = valores.map((v,i)=> (i?'L':'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' ');
+    el('path', {d: dLinha + ` L ${X(valores.length-1)} ${mar.t+ih} L ${mar.l} ${mar.t+ih} Z`, fill, class:'an-area'}, svg);
+    const linha = el('path', {d:dLinha, fill:'none', stroke:corGlow, 'stroke-width':2, 'stroke-linejoin':'round', 'stroke-linecap':'round', filter:gl, class:'an-linha'}, svg);
+    linha.style.setProperty('--comp', 2400); linha.style.strokeDasharray = 2400;
+
+    const dT = tend.map((v,i)=> (i?'L':'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' ');
+    el('path', {d:dT, fill:'none', stroke:'var(--ink-3)', 'stroke-width':1.5, opacity:.9}, svg);
+    txt(svg, X(0)+6, Y(tend[0])-9, 'Trend', 'mini-txt');
+
+    el('rect', {x:X(iPar), y:mar.t, width:iw/(valores.length-1), height:ih, fill:'rgba(255,255,255,.05)'}, svg);
+    txt(svg, X(iPar)-6, mar.t-8, 'Partial ▸', 'mini-txt', {'text-anchor':'end'});
+
+    meses.forEach((s,i)=>{ if (i%3===0 || i===meses.length-1) txt(svg, X(i), H-12, rotMes(s), 'eixo-txt', {'text-anchor':'middle'}); });
+    const cheios = valores.slice(0, iPar);
+    const iMax = cheios.indexOf(Math.max(...cheios));
+    [[iMax,' · peak'], [iPar-1,'']].forEach(([i,tag])=>{
+      el('circle', {cx:X(i), cy:Y(valores[i]), r:4.5, fill:corGlow, stroke:'var(--bg-1)', 'stroke-width':2, filter:gl}, svg);
+      const anc = X(i) > W-mar.r-90 ? 'end' : (X(i) < mar.l+60 ? 'start' : 'middle');
+      txt(svg, X(i) + (anc==='end'?8:anc==='start'?-8:0), Y(valores[i])-14, fmt(valores[i]) + tag, 'val-txt', {'text-anchor':anc});
+    });
+
+    const fio = el('line', {y1:mar.t, y2:mar.t+ih, stroke:'rgba(255,255,255,.28)', 'stroke-width':1, opacity:0}, svg);
+    const bola = el('circle', {r:5, fill:corGlow, stroke:'var(--bg-1)', 'stroke-width':2, opacity:0, filter:gl}, svg);
+    const cap = el('rect', {x:mar.l, y:mar.t, width:iw, height:ih, fill:'transparent'}, svg);
+    cap.style.cursor = 'crosshair';
+    cap.addEventListener('mousemove', e => {
+      const r = svg.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width * W;
+      let i = Math.round((px - mar.l)/iw*(valores.length-1));
+      i = Math.max(0, Math.min(valores.length-1, i));
+      fio.setAttribute('x1', X(i)); fio.setAttribute('x2', X(i)); fio.setAttribute('opacity', 1);
+      bola.setAttribute('cx', X(i)); bola.setAttribute('cy', Y(valores[i])); bola.setAttribute('opacity', 1);
+      mostrarTip(e, rotMes(meses[i]), [[rotEixo, fmt(valores[i])], ['Trend', fmt(tend[i])]]);
+    });
+    cap.addEventListener('mouseleave', ()=>{ fio.setAttribute('opacity',0); bola.setAttribute('opacity',0); esconderTip(); });
+  }
+
+  areaChart('svg-receita', D.mensal.meses, D.mensal.receita, D.mensal.receita_tendencia, moedaCurta, '#ffeb3b', 'GMV');
+  areaChart('svg-leads', D.mensal.meses, D.mensal.vendas, D.mensal.leads_tendencia, int, '#ef4444', 'Orders');
+
+  document.getElementById('tab-mensal').innerHTML = `<table><thead><tr><th>Month</th><th>Orders</th><th>GMV</th><th>Cost</th><th>Margin</th></tr></thead><tbody>` +
+  D.mensal.meses.map((mes,i)=>`<tr><td>${rotMes(mes)}</td><td>${int(D.mensal.vendas[i])}</td><td>${moeda(D.mensal.receita[i])}</td><td>${moeda(D.mensal.investimento[i])}</td><td>${mult(D.mensal.receita[i]/D.mensal.investimento[i])}</td></tr>`).join('') + '</tbody></table>';
+}
+
+function renderFunil() {
+  const svg = limpar('svg-funil');
+  const f = D.funil, W = 780, linha = 52, H = f.length*linha + 30;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const mar = {l:150, r:150};
+  const iw = W - mar.l - mar.r, mx = f[0].qtd;
+  const RAMPA = ['var(--o1)','var(--o2)','var(--o3)','var(--o4)','var(--o5)','var(--o6)'];
+  f.forEach((e,i)=>{
+    const qtd = e.qtd;
+    const y = 8 + i*linha, h = 30, w = Math.max(6, qtd/mx*iw), x = mar.l + (iw-w)/2;
+    const g = el('g', {}, svg);
+    anim(el('rect', {x, y, width:w, height:h, rx:5, fill:RAMPA[i], opacity:.92}, g), 'xc', i*0.08);
+    txt(svg, mar.l-16, y+20, e.etapa, 'rot-txt', {'text-anchor':'end'});
+    txt(svg, W-mar.r+16, y+13, int(qtd), 'val-txt');
+    txt(svg, W-mar.r+16, y+27, pct(e.pct_total) + ' of total', 'mini-txt');
+    if (e.pct_anterior !== null){
+      const ehGargalo = e.etapa === D.gargalo.etapa;
+      const cor = ehGargalo ? 'var(--critico)' : 'var(--ink-3)';
+      const t = txt(svg, mar.l + iw/2, y-9, (ehGargalo?'▼ ':'') + pct(e.pct_anterior) + ' clear' + (ehGargalo ? '  ·  bottleneck' : ''), 'mini-txt', {'text-anchor':'middle'});
+      t.setAttribute('fill', cor);
+      if (ehGargalo) t.setAttribute('font-weight','700');
+    }
+    ligarTip(g, e.etapa, [['Volume', int(qtd)], ['% of Total', pct(e.pct_total)]].concat(e.pct_anterior !== null ? [['Clearance Rate', pct(e.pct_anterior)], ['Stuck here', int(e.perda)]] : []));
+  });
+}
+
+function renderVelocidade() {
+  const svg = limpar('svg-velocidade');
+  const v = D.velocidade, W = 780, H = 300, mar = {t:26, r:26, b:56, l:56};
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const iw = W-mar.l-mar.r, ih = H-mar.t-mar.b;
+  const esc = escala(Math.max(...v.map(d=>d.conversao)) * 1.15, 4);
+  const mx = esc.max;
+  const bw = iw/v.length, larg = Math.min(84, bw*0.56);
+  const RAMPA = ['var(--o1)','var(--o2)','var(--o3)','var(--o5)','var(--o6)'];
+  esc.passos.forEach(val => {
+    const y = mar.t + ih - val/mx*ih;
+    el('line', {x1:mar.l, x2:W-mar.r, y1:y, y2:y, class:'linha-grid'}, svg);
+    txt(svg, mar.l-10, y+4, pct(val,0), 'eixo-txt', {'text-anchor':'end'});
+  });
+  el('line', {x1:mar.l, x2:W-mar.r, y1:mar.t+ih, y2:mar.t+ih, class:'linha-eixo'}, svg);
+  const grupo = el('g', {class:'grupo'}, svg);
+  v.forEach((d,i)=>{
+    const cx = mar.l + bw*i + bw/2, h = Math.max(d.conversao/mx*ih, 2), y = mar.t+ih-h;
+    const g = el('g', {class:'item'}, grupo);
+    anim(el('rect', {x:cx-larg/2, y, width:larg, height:h, rx:5, fill:RAMPA[i], class:'marca-hover'}, g), 'y', i*0.09);
+    txt(svg, cx, y-10, pct(d.conversao), 'val-txt', {'text-anchor':'middle'});
+    txt(svg, cx, H-32, d.faixa, 'rot-txt', {'text-anchor':'middle'});
+    txt(svg, cx, H-17, int(d.vendas) + ' orders', 'mini-txt', {'text-anchor':'middle'});
+    ligarTip(g, d.faixa, [['Orders', int(d.vendas)], ['Satisfaction', pct(d.conversao)], ['GMV Impact', moedaCurta(d.receita)], ['Driver Cost', moedaCurta(d.investimento)]]);
+  });
+  const yRef = mar.t + ih - D.totais.conversao/mx*ih;
+  el('line', {x1:mar.l, x2:W-mar.r, y1:yRef, y2:yRef, stroke:'var(--neon-ambar)', 'stroke-width':1, opacity:.65}, svg);
+  txt(svg, W-mar.r, yRef-7, 'Avg Sat. ' + pct(D.totais.conversao), 'mini-txt', {'text-anchor':'end', fill:'var(--neon-ambar)'});
+}
+
+function renderPerdas() {
+  const svg = limpar('svg-perdas');
+  const p = D.motivos_perda, W = 780, linha = 34, H = p.length*linha + 16;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const mar = {l:200, r:96}, iw = W-mar.l-mar.r, mx = p[0].pct;
+  const grupo = el('g', {class:'grupo'}, svg);
+  p.forEach((d,i)=>{
+    const y = 8 + i*linha, h = 18, w = d.pct/mx*iw;
+    const g = el('g', {class:'item'}, grupo);
+    anim(el('rect', {x:mar.l, y, width:Math.max(w,2), height:h, rx:4, fill: i===0 ? 'var(--critico)' : 'var(--s1)', opacity: i===0 ? .95 : .8, class:'marca-hover'}, g), 'x', i*0.07);
+    txt(svg, mar.l-14, y+13, d.motivo, 'rot-txt', {'text-anchor':'end'});
+    txt(svg, mar.l+w+12, y+13, pct(d.pct) + '  ·  ' + int(d.qtd), 'val-txt');
+    ligarTip(g, d.motivo, [['Affected Orders', int(d.qtd)], ['% of Escalations', pct(d.pct)]]);
+  });
+}
+
+function renderEquipes() {
+  const svg = limpar('svg-equipes');
+  const e = D.equipes, W = 780, linha = 62, H = e.length*linha + 26;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const mar = {l:132, r:150}, iw = W-mar.l-mar.r;
+  const mx = Math.max(...e.map(d=>Math.max(d.meta, d.realizado))) * 1.06;
+  e.forEach((d,i)=>{
+    const y = 14 + i*linha, h = 22;
+    const wR = (d.realizado)/mx*iw, xM = mar.l + (d.meta)/mx*iw;
+    const bateu = d.atingimento >= 1;
+    const g = el('g', {}, svg);
+    el('rect', {x:mar.l, y, width:iw, height:h, rx:5, fill:'rgba(255,255,255,.05)'}, g);
+    anim(el('rect', {x:mar.l, y, width:Math.max(wR,2), height:h, rx:5, fill:'var(--s1)', opacity:.95}, g), 'x', i*0.1);
+    el('line', {x1:xM, x2:xM, y1:y-6, y2:y+h+6, stroke:'var(--neon-ambar)', 'stroke-width':2.5, 'stroke-linecap':'round'}, g);
+    txt(svg, xM, y-11, 'Target ' + moedaCurta(d.meta), 'mini-txt', {'text-anchor':'middle', fill:'var(--neon-ambar)'});
+    txt(svg, mar.l-14, y+11, d.equipe, 'rot-txt', {'text-anchor':'end'});
+    txt(svg, mar.l-14, y+26, 'Avg Time ' + nf(0).format(d.mediana_horas) + ' mins', 'mini-txt', {'text-anchor':'end'});
+    const t = txt(svg, W-mar.r+16, y+11, (bateu ? '✓ ' : '✗ ') + pct(d.atingimento,0) + ' of Goal', 'val-txt');
+    t.setAttribute('fill', bateu ? 'var(--ok)' : 'var(--critico)');
+    txt(svg, W-mar.r+16, y+26, moedaCurta(d.realizado) + ' · On-Time ' + pct(d.conversao), 'mini-txt');
+    ligarTip(g, d.equipe, [['Target', moeda(d.meta)], ['Actual GMV', moeda(d.realizado)], ['Achievement', pct(d.atingimento,0)], ['Orders', int(d.vendas)], ['Avg Delivery', nf(0).format(d.mediana_horas) + ' mins'], ['On-Time', pct(d.conversao)]]);
+  });
+}
+
+function renderQuadrantes() {
+  const svg = limpar('svg-quadrantes');
+  const c = D.campanhas, W = 1200, H = 470, mar = {t:24, r:36, b:56, l:66};
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const iw = W-mar.l-mar.r, ih = H-mar.t-mar.b;
+  if(c.length === 0) return;
+  const escL = escala(Math.max(...c.map(d=>d.vendas))*1.08, 5);
+  const escC = escala(Math.max(...c.map(d=>d.conversao))*1.10, 4);
+  const mxI = Math.max(...c.map(d=>d.investimento));
+  const X = v => mar.l + (v)/escL.max*iw, Y = v => mar.t + ih - v/escC.max*ih;
+  const R = v => 10 + Math.sqrt(v/mxI)*30;
+  const defs = el('defs', {}, svg);
+  const COR = {Escalar:'var(--ok)', Manter:'var(--atencao)', Cortar:'var(--critico)'};
+  const GLOW = {Escalar:brilho(defs,'q-ok','#ffeb3b',5), Manter:brilho(defs,'q-at','#f97316',5), Cortar:brilho(defs,'q-cr','#ef4444',5)};
+
+  const leadsOrd = c.map(d=>d.vendas).sort((a,b)=>a-b);
+  const medL = leadsOrd[Math.floor(leadsOrd.length/2)];
+  const xd = X(medL), yd = Y(D.totais.conversao);
+  el('rect', {x:xd, y:mar.t, width:mar.l+iw-xd, height:yd-mar.t, fill:'rgba(255, 235, 59,.06)'}, svg);
+  el('rect', {x:xd, y:yd, width:mar.l+iw-xd, height:mar.t+ih-yd, fill:'rgba(239, 68, 68,.07)'}, svg);
+
+  escC.passos.forEach(v => { const y = Y(v); el('line', {x1:mar.l, x2:W-mar.r, y1:y, y2:y, class:'linha-grid'}, svg); txt(svg, mar.l-10, y+4, pct(v,0), 'eixo-txt', {'text-anchor':'end'}); });
+  escL.passos.forEach(v => txt(svg, X(v), H-30, int(v), 'eixo-txt', {'text-anchor':'middle'}));
+  el('line', {x1:mar.l, x2:W-mar.r, y1:mar.t+ih, y2:mar.t+ih, class:'linha-eixo'}, svg);
+  el('line', {x1:xd, x2:xd, y1:mar.t, y2:mar.t+ih, stroke:'var(--eixo)', 'stroke-width':1}, svg);
+  el('line', {x1:mar.l, x2:W-mar.r, y1:yd, y2:yd, stroke:'var(--eixo)', 'stroke-width':1}, svg);
+  txt(svg, mar.l+8, yd-8, 'Avg On-Time ' + pct(D.totais.conversao), 'mini-txt');
+  txt(svg, xd+7, mar.t+ih-8, 'Median Volume', 'mini-txt');
+  txt(svg, W/2, H-10, 'Total Orders Volume', 'mini-txt', {'text-anchor':'middle'});
+  txt(svg, 16, mar.t+ih/2, 'On-Time Rate (%)', 'mini-txt', {'text-anchor':'middle', transform:`rotate(-90 16 ${mar.t+ih/2})`});
+  txt(svg, W-mar.r-10, mar.t+16, 'VOLUME + RESULT ▸ SCALE', 'mini-txt', {'text-anchor':'end', fill:'var(--ok)', 'letter-spacing':'.09em'});
+  txt(svg, W-mar.r-10, yd+18, 'VOLUME + POOR SLA ▸ CUT/REVIEW', 'mini-txt', {'text-anchor':'end', fill:'var(--critico)', 'letter-spacing':'.09em'});
+
+  const grupo = el('g', {class:'grupo'}, svg);
+  const bolhas = [...c].sort((a,b)=>b.investimento-a.investimento).map(d => ({d, cx:X(d.vendas), cy:Y(d.conversao), r:R(d.investimento)}));
+
+  bolhas.forEach((b,i)=>{
+    const g = el('g', {class:'item'}, grupo);
+    anim(el('circle', {cx:b.cx, cy:b.cy, r:b.r, fill:COR[b.d.decisao], 'fill-opacity':.28, stroke:COR[b.d.decisao], 'stroke-width':2, class:'marca-hover', filter:GLOW[b.d.decisao]}, g), 'b', i*0.045);
+    const alvo = el('circle', {cx:b.cx, cy:b.cy, r:Math.max(b.r, 16), fill:'transparent'}, g);
+    const d = b.d;
+    ligarTip(alvo, d.campanha, [['Mode', d.canal], ['Volume', int(d.vendas)], ['On-Time', pct(d.conversao)], ['Driver Cost', moeda(d.investimento)], ['Margin', d.roas ? mult(d.roas) : '—'], ['Action', d.decisao]]);
+  });
+
+  const postos = [];
+  const cruza = (cx1,cy1,x1,y1,x2,y2) => cx1 > x1 && cx1 < x2 && cy1 > y1 && cy1 < y2;
+  bolhas.filter(b => b.d.decisao === 'Cortar' || b.d.roas >= 0.50 || b.d.investimento >= mxI*0.75).forEach(b => {
+    const larg = b.d.campanha.length * 5.8, alt = 13;
+    const opcoes = [ {x:b.cx + b.r + 8, anc:'start', y:b.cy + 4}, {x:b.cx - b.r - 8, anc:'end', y:b.cy + 4}, {x:b.cx, anc:'middle',y:b.cy - b.r - 9}, {x:b.cx, anc:'middle',y:b.cy + b.r + 17} ];
+    const caixa = o => { const x1 = o.anc === 'start' ? o.x : o.anc === 'end' ? o.x - larg : o.x - larg/2; return [x1, o.y - alt + 3, x1 + larg, o.y + 3]; };
+    const escolha = opcoes.find(o => {
+      const [x1,y1,x2,y2] = caixa(o);
+      if (x1 < mar.l + 2 || x2 > W - mar.r - 2 || y1 < mar.t || y2 > mar.t + ih) return false;
+      if (bolhas.some(o2 => o2 !== b && cruza(o2.cx, o2.cy, x1 - o2.r, y1 - o2.r, x2 + o2.r, y2 + o2.r))) return false;
+      return !postos.some(p => x1 < p[2] && x2 > p[0] && y1 < p[3] && y2 > p[1]);
+    }) || opcoes[0];
+    postos.push(caixa(escolha));
+    txt(svg, escolha.x, escolha.y, b.d.campanha, 'mini-txt', {'text-anchor':escolha.anc, fill:'var(--ink-2)'});
+  });
+
+  document.getElementById('chave-quadrantes').innerHTML = [['Scale','ok','▲', COR.Escalar], ['Maintain','at','●', COR.Manter], ['Review','cr','▼', COR.Cortar]].map(([n,,ic,cor])=>`<span><i class="pt round" style="background:${cor}"></i>${ic} ${n}</span>`).join('') + `<span style="color:var(--ink-3)">Scale: High SLA & Margin · Maintain: Average Performance · Review: Low Margin, Low SLA</span>`;
+}
+
+function renderCanais() {
+  const svg = limpar('svg-canais');
+  const c = D.canais, W = 780, linha = 42, H = c.length*linha + 56;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  if(c.length===0) return;
+  const mar = {l:112}, colW = 122, rotW = 66, gap = 16; 
+  const x0 = mar.l, x1 = x0 + colW + rotW + gap, x2 = x1 + colW + rotW + gap;
+  const mxI = Math.max(...c.map(d=>d.investimento));
+  const mxR = Math.max(...c.map(d=>d.receita));
+  const mxRo = Math.max(...c.map(d=>d.roas));
+  [['Driver Cost', x0], ['GMV Generated', x1], ['Margin', x2]].forEach(([t,x])=> txt(svg, x, 20, t.toUpperCase(), 'mini-txt', {'letter-spacing':'.11em'}));
+  const xEq = x2 + D.premissas.roas_equilibrio/mxRo*colW;
+  el('line', {x1:xEq, x2:xEq, y1:30, y2:H-30, stroke:'var(--critico)', 'stroke-width':1, opacity:.55}, svg);
+  txt(svg, xEq, H-16, 'Floor ' + mult(D.premissas.roas_equilibrio), 'mini-txt', {fill:'var(--critico)', 'text-anchor':'middle'});
+  
+  const grupo = el('g', {class:'grupo'}, svg);
+  c.forEach((d,i)=>{
+    const y = 38 + i*linha, h = 16;
+    const g = el('g', {class:'item'}, grupo);
+    txt(svg, mar.l-14, y+11, d.canal, 'rot-txt', {'text-anchor':'end'});
+    txt(svg, mar.l-14, y+25, int(d.vendas) + ' orders · On-Time ' + pct(d.conversao), 'mini-txt', {'text-anchor':'end'});
+    [[x0, (d.investimento)/mxI*colW, 'var(--s2)', moedaCurta(d.investimento)], [x1, (d.receita)/mxR*colW, 'var(--s1)', moedaCurta(d.receita)], [x2, d.roas/mxRo*colW, d.roas < D.premissas.roas_equilibrio ? 'var(--critico)' : 'var(--s3)', mult(d.roas)]].forEach(([x,w,cor,rot],j)=>{
+      anim(el('rect', {x, y, width:Math.max(w,2), height:h, rx:4, fill:cor, opacity:.9, class:'marca-hover'}, g), 'x', i*0.06 + j*0.05);
+      txt(svg, x+w+9, y+12, rot, 'val-txt', {'font-size':'11.5px'});
+    });
+    ligarTip(g, d.canal, [['Volume', int(d.vendas)], ['On-Time', pct(d.conversao)], ['Driver Cost', moeda(d.investimento)], ['GMV', moeda(d.receita)], ['Cost/Order', moeda(d.cpl||(d.investimento/d.vendas))], ['Margin', mult(d.roas)]]);
+  });
+}
+
+function renderEstados() {
+  const svg = limpar('svg-estados');
+  const e = D.estados, W = 780, linha = 26, H = e.length*linha + 18;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const mar = {l:52, r:210}, iw = W-mar.l-mar.r, mx = e[0].receita;
+  const grupo = el('g', {class:'grupo'}, svg);
+  e.forEach((d,i)=>{
+    const y = 8 + i*linha, h = 14, w = (d.receita)/mx*iw;
+    const g = el('g', {class:'item'}, grupo);
+    anim(el('rect', {x:mar.l, y, width:Math.max(w,2), height:h, rx:4, fill:'var(--s1)', opacity: .95 - i*0.035, class:'marca-hover'}, g), 'x', i*0.035);
+    txt(svg, mar.l-12, y+11, d.uf, 'rot-txt', {'text-anchor':'end', 'font-weight':600});
+    txt(svg, mar.l+w+10, y+11, moedaCurta(d.receita) + '   ·   ' + int(d.vendas) + ' units · On-Time ' + pct(d.conversao), 'mini-txt');
+    ligarTip(g, d.uf, [['Orders', int(d.vendas)], ['GMV', moeda(d.receita)], ['On-Time', pct(d.conversao)], ['Avg Order Value', moeda(d.ticket)]]);
+  });
+}
+
+function renderTipos() {
+  const svg = limpar('svg-tipos');
+  const t = D.tipos, W = 1200, linha = 56, H = t.length*linha + 54;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const mar = {l:130}, colW = 208, rotW = 78, gap = 22; 
+  const x0 = mar.l, x1 = x0+colW+rotW+gap, x2 = x1+colW+rotW+gap;
+  const mxT = Math.max(...t.map(d=>d.ticket));
+  const mxS = Math.max(...t.map(d=>d.share_invest));
+  const mxR = Math.max(...t.map(d=>d.receita));
+  [['Avg Order Value', x0], ['Cost Share', x1], ['Generated GMV', x2]].forEach(([s,x])=> txt(svg, x, 22, s.toUpperCase(), 'mini-txt', {'letter-spacing':'.11em'}));
+  
+  const grupo = el('g', {class:'grupo'}, svg);
+  t.forEach((d,i)=>{
+    const y = 44 + i*linha, h = 18;
+    const g = el('g', {class:'item'}, grupo);
+    txt(svg, mar.l-16, y+14, d.tipo, 'rot-txt', {'text-anchor':'end'});
+    txt(svg, mar.l-16, y+29, int(d.vendas) + ' orders', 'mini-txt', {'text-anchor':'end'});
+    [[x0, d.ticket/mxT*colW, 'var(--s1)', moeda(d.ticket)], [x1, d.share_invest/mxS*colW, 'var(--s2)', pct(d.share_invest,0)], [x2, (d.receita)/mxR*colW, 'var(--s3)', moedaCurta(d.receita)]].forEach(([x,w,cor,rot],j)=>{
+      anim(el('rect', {x, y:y+2, width:Math.max(w,2), height:h, rx:4, fill:cor, opacity:.9, class:'marca-hover'}, g), 'x', i*0.07 + j*0.05);
+      txt(svg, x+w+10, y+15, rot, 'val-txt', {'font-size':'11.5px'});
+    });
+    ligarTip(g, d.tipo, [['Orders', int(d.vendas)], ['On-Time', pct(d.conversao)], ['AOV', moeda(d.ticket)], ['GMV', moeda(d.receita)], ['Driver Cost', moeda(d.investimento)], ['Cost Share', pct(d.share_invest,0)]]);
+  });
+}
+
+function renderTabela() {
+  const c = [...D.campanhas].sort((a,b)=> (a.roas??0) - (b.roas??0));
+  const TAG = {Cortar:['cr','▼','Review'], Manter:['at','●','Maintain'], Escalar:['ok','▲','Scale']};
+  document.getElementById('tab-campanhas').innerHTML =
+    `<thead><tr><th>Route/Zone</th><th>Mode</th><th>Volume</th><th>On-Time</th>
+      <th>Cost</th><th>GMV</th><th>Cost/Order</th><th>Margin</th><th>Action</th></tr></thead><tbody>` +
+    c.map(d=>{
+      const [cls,ic,txt] = TAG[d.decisao];
+      return `<tr class="${d.decisao==='Cortar'?'perigo':''}">
+        <td>${d.campanha}</td><td>${d.canal}</td><td>${int(d.vendas)}</td>
+        <td>${pct(d.conversao)}</td><td>${moeda(d.investimento)}</td><td>${moeda(d.receita)}</td>
+        <td>${moeda(d.investimento/d.vendas)}</td>
+        <td style="${d.roas < D.premissas.roas_equilibrio ? 'color:var(--critico);font-weight:700' : ''}">${d.roas?mult(d.roas):'—'}</td>
+        <td><span class="tag ${cls}">${ic} ${txt}</span></td></tr>`;
+    }).join('') + '</tbody>';
+  document.getElementById('dica-tabela').innerHTML = `Red indicates Margin below floor of ${mult(D.premissas.roas_equilibrio)} (Target Gross Margin ${pct(D.premissas.margem_bruta,0)})`;
+}
+
+function renderTextosInsights() {
+  const L = (id, s) => document.getElementById(id).innerHTML = '<span class="sinal" aria-hidden="true">→</span>' + s;
+  const kR = D.kpis.find(k=>k.id==='receita');
+  L('ler-receita', `Closed GMV in ${D.periodo.atual} reached <b>${moedaCurta(kR.valor)}</b>, a <b>${kR.var.delta>=0?'+':'−'}${nf(1).format(Math.abs(kR.var.delta)*100)}%</b> variance vs ${D.periodo.anterior}.`);
+  L('ler-leads', `Processed <b>${int(D.totais.vendas)} orders</b> this period. Volume is steady, shifting focus to delivery efficiency and support ticket reduction.`);
+  L('ler-funil', `From all processed orders, only <b>${nf(0).format(D.funil[4].pct_total*100)}%</b> seamlessly reach the drop-off phase. <b>${int(D.funil[4].perda)}</b> orders required live operational escalations.`);
+  L('ler-velocidade', `Orders delivered under 15 Mins hit <b>${pct(D.velocidade_resumo.conv_1h)}</b> Satisfaction; over 60 mins drops to <b>${pct(D.velocidade_resumo.conv_24h)}</b>.`);
+  L('ler-perdas', `The #1 reason for support SLA breaches is <b>${D.motivos_perda[0].motivo}</b>, accounting for <b>${pct(D.motivos_perda[0].pct)}</b> of all issues.`);
+  L('ler-equipes', `Metro Zone East handles the most volume, but Central Hub is the most efficient against operational targets.`);
+  L('ler-quadrantes', `Large bubbles in the red zone are bleeding margin. <b>${D.cortar.qtd} zones</b> consume <b>${moedaCurta(D.cortar.investimento)}</b> but operate below the operational margin floor.`);
+  L('ler-canais', `Car Deliveries are fast for long distances; Bicycle deliveries yield the best margin for dense downtown corridors.`);
+  L('ler-estados', `<b>${D.estados[0].uf}</b> accounts for ${pct(D.estados[0].receita/D.totais.receita,0)} of total GMV (${moedaCurta(D.estados[0].receita)}).`);
+  L('ler-campanhas', `Do not cut entire transport modes. Curate or renegotiate specific underperforming zones/driver operational incentives.`);
+  L('ler-tipos', `Priority direct deliveries hold the highest cost share but yield the best On-Time rates and lowest support escalations.`);
+}
+
+/* ==============================================================
+   UTILS (Fullscreen & HD PDF Export)
+   ============================================================== */
+function toggleFS() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => alert(`Error: ${err.message}`));
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+async function exportPDF() {
+    const overlay = document.getElementById('loading-overlay');
+    overlay.style.display = 'flex';
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        await new Promise(r => setTimeout(r, 600));
+
+        const doc = new jsPDF('landscape', 'mm', 'a4');
+        const cards = document.querySelectorAll('.card');
+
+        document.querySelectorAll('.alterna').forEach(e => e.style.display = 'none');
+
+        for (let i = 0; i < cards.length; i++) {
+            const canvas = await html2canvas(cards[i], {
+                scale: 3, 
+                backgroundColor: '#0f0a05', 
+                logging: false,
+                useCORS: true
+            });
+            
+            if (i > 0) doc.addPage();
+            
+            const pdfW = doc.internal.pageSize.getWidth();
+            const pdfH = doc.internal.pageSize.getHeight();
+            const margin = 15;
+            
+            const maxW = pdfW - (margin * 2);
+            const maxH = pdfH - (margin * 2);
+            
+            const origW = (canvas.width / 3) * 0.264583;
+            const origH = (canvas.height / 3) * 0.264583;
+            
+            let scale = Math.min(maxW / origW, maxH / origH);
+            if (scale > 1.35) scale = 1.35;
+            
+            const w = origW * scale;
+            const h = origH * scale;
+            
+            const x = (pdfW - w) / 2;
+            const y = (pdfH - h) / 2;
+            
+            doc.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', x, y, w, h);
+        }
+
+        doc.save('BiteSpeed_Eats_HD_Report.pdf');
+    } catch (error) {
+        console.error("PDF Error:", error);
+        alert("Failed to generate PDF.");
+    } finally {
+        document.querySelectorAll('.alterna').forEach(e => e.style.display = 'flex');
+        overlay.style.display = 'none';
+    }
+}
+
+const btG = document.getElementById('bt-graf'), btT = document.getElementById('bt-tab');
+function alternar(tab){
+  document.getElementById('graf-receita').classList.toggle('oculto', tab);
+  document.getElementById('tab-mensal').classList.toggle('oculto', !tab);
+  btG.setAttribute('aria-pressed', String(!tab)); btT.setAttribute('aria-pressed', String(tab));
+}
+btG.onclick = ()=>alternar(false); btT.onclick = ()=>alternar(true);
+
+document.getElementById('rodape').innerHTML = `<b>Source:</b> BiteSpeed Eats Dynamic Data Model.<br><b>Intelligence:</b> Metrics auto-scale and shape-shift based on deep cohort operational behaviors. HD PDF export enabled.`;
+
+window.onload = () => {
+    updateDataModel();
+    renderDashboard();
+};
+
+</script>
+</body>
+</html>
